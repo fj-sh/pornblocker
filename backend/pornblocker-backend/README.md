@@ -29,3 +29,7 @@ gradle clean build install
 
 [Gradle dependencies](https://www.jetbrains.com/idea/guide/tutorials/working-with-gradle/gradle-dependencies/)
 
+
+## H2Databaseのセットアップ
+
+[Spring Boot With H2 Database](https://www.baeldung.com/spring-boot-h2-database)
