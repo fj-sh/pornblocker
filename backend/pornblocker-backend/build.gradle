@@ -29,6 +29,10 @@ dependencies {
     // https://mvnrepository.com/artifact/com.h2database/h2
     testImplementation group: 'com.h2database', name: 'h2', version: '2.1.214'
 
+    // https://mvnrepository.com/artifact/com.microsoft.playwright/playwright
+    implementation group: 'com.microsoft.playwright', name: 'playwright', version: '1.24.1'
+
+
 }
 
 tasks.named('test') {

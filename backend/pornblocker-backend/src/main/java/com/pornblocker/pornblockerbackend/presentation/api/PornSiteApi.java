@@ -27,4 +27,9 @@ public class PornSiteApi {
     var pornSites = service.getAllPornSites();
     return pornSites;
   }
+
+  @GetMapping("/scraping")
+  public void execScraping() {
+    service.scrapingGoogle();
+  }
 }
