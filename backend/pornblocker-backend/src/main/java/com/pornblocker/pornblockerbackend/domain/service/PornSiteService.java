@@ -5,19 +5,31 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
+import com.pornblocker.pornblockerbackend.domain.model.Keywords;
 import com.pornblocker.pornblockerbackend.domain.model.PornSite;
+import com.pornblocker.pornblockerbackend.persistence.entity.PornSiteEntity;
+import com.pornblocker.pornblockerbackend.persistence.repository.KeywordsRepository;
 import com.pornblocker.pornblockerbackend.persistence.repository.PornSiteRepository;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class PornSiteService {
   private final PornSiteRepository pornSiteRepository;
+  private final KeywordsRepository keywordsRepository;
 
-  public PornSiteService(PornSiteRepository pornSiteRepository) {
+  public PornSiteService(PornSiteRepository pornSiteRepository,
+                         KeywordsRepository keywordsRepository) {
     this.pornSiteRepository = pornSiteRepository;
+    this.keywordsRepository = keywordsRepository;
   }
 
   public List<PornSite> getAllPornSites() {
@@ -27,8 +39,33 @@ public class PornSiteService {
     return pornSiteList;
   }
 
-  public void scrapingPornUrlFromGoogle(String keyword) {
-    System.out.println("Execute scrapingGoogle.");
+  private List<String> getPornUrlsFromPage(Page page) throws MalformedURLException {
+    String aTagWrapperClassName = "#rso > div:nth-child(n) > div > video-voyager > div > div > div > div.ct3b9e";
+    List<ElementHandle> aTagElements = page.querySelectorAll(aTagWrapperClassName);
+
+    List<String> pornUrls = new ArrayList<String>();
+    for (ElementHandle aTagElement: aTagElements) {
+      String href = aTagElement.querySelector("a").getAttribute("href");
+      String baseUrl = new URL(new URL(href), "/").toString();
+      pornUrls.add(baseUrl);
+    }
+    return pornUrls;
+  }
+
+  public List<String> getSearchResultUrls() {
+    try {
+      Keywords keywords = keywordsRepository.getKeywords();
+      Stream<List> urls = keywords.getKeywords().map(this::getSearchResultUrlsByKeyword);
+      List<String> flatUrls = (List<String>) urls.flatMap(Collection::stream)
+          .collect(Collectors.toList());
+      return flatUrls;
+    } catch (Exception e) {
+      System.out.println(e);
+    }
+    return null;
+  }
+
+  public List<String> getSearchResultUrlsByKeyword(String keyword) {
     try (Playwright playwright = Playwright.create()) {
       BrowserType.LaunchOptions options = new BrowserType.LaunchOptions();
       options.setHeadless(false);
@@ -40,14 +77,33 @@ public class PornSiteService {
       page.locator(inputSelector).fill(keyword);
       page.locator(inputSelector).press("Enter");
       page.waitForTimeout(1000);
-      page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get("example.png")));
-      String aTagWrapperClassName = "#rso > div:nth-child(n) > div > video-voyager > div > div > div > div.ct3b9e";
-      List<ElementHandle> aTagElements = page.querySelectorAll(aTagWrapperClassName);
-      for (ElementHandle aTagElement: aTagElements) {
-        System.out.println(aTagElement.querySelector("a").getAttribute("href"));
+      List<String> pornUrls = new ArrayList<String>();
+      String nextLinkSelector = "#pnnext > span:nth-child(2)";
+      for (int i = 0; i <= 30; i++) {
+        page.locator(nextLinkSelector).click();
+        page.waitForTimeout(1000);
+        List<String> pornUrlsFromPage = getPornUrlsFromPage(page);
+        pornUrls.addAll(pornUrlsFromPage);
       }
+
+      List<String> uniquePronUrls = new ArrayList<>(new HashSet<>(pornUrls));
+      return uniquePronUrls;
+
     } catch (Exception e) {
       System.out.println(e);
+    }
+    return null;
+  }
+
+  public void insertPornUrls (List<String> pornUrls) {
+    List<PornSiteEntity> entities = pornSiteRepository.findAll();
+    List<String> pornSiteUrlsByDB = entities.stream().map(PornSiteEntity::getSiteUrl).toList();
+    List<String> allUrls = new ArrayList<>();
+    allUrls.addAll(List.copyOf(pornUrls));
+    allUrls.addAll(List.copyOf(pornSiteUrlsByDB));
+    List<String> allUniqueUrls = new ArrayList<String>(new HashSet<>(allUrls));
+    for (String url: allUniqueUrls) {
+      System.out.println(url);
     }
   }
 }

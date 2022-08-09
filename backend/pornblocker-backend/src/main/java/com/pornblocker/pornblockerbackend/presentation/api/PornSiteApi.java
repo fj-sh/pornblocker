@@ -30,7 +30,7 @@ public class PornSiteApi {
 
   @GetMapping("/collect")
   public void execScraping() {
-    String keyword = "朝倉未来";
-    service.scrapingPornUrlFromGoogle(keyword);
+    List<String> pornUrls = service.getSearchResultUrls();
+    service.insertPornUrls(pornUrls);
   }
 }

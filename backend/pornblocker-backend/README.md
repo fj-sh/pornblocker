@@ -33,3 +33,24 @@ gradle clean build install
 ## H2Databaseのセットアップ
 
 [Spring Boot With H2 Database](https://www.baeldung.com/spring-boot-h2-database)
+
+## ほしいアウトプット
+
+```json
+{
+  content_scripts: [
+    {
+      js: ['src/content-script/instagram.ts'],
+      matches: ['https://www.instagram.com/*'],
+    },
+    {
+      js: ['src/content-script/twitter.ts'],
+      matches: ['https://twitter.com/*'],
+    },
+    {
+      js: ['src/content-script/youtube.ts'],
+      matches: ['https://www.youtube.com/*'],
+    },
+  ],
+}
+```
