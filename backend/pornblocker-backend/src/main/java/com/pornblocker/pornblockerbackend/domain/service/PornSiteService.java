@@ -2,6 +2,7 @@ package com.pornblocker.pornblockerbackend.domain.service;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.pornblocker.pornblockerbackend.domain.model.PornSite;
@@ -26,19 +27,27 @@ public class PornSiteService {
     return pornSiteList;
   }
 
-  public void scrapingGoogle() {
+  public void scrapingPornUrlFromGoogle(String keyword) {
     System.out.println("Execute scrapingGoogle.");
     try (Playwright playwright = Playwright.create()) {
       BrowserType.LaunchOptions options = new BrowserType.LaunchOptions();
       options.setHeadless(false);
       Browser browser = playwright.webkit().launch(options);
       Page page = browser.newPage();
-      page.navigate("https://www.google.com/?hl=ja");
-      String inputSelector = "body > div.L3eUgb > div.o3j99.ikrT4e.om7nvf > form > div:nth-child(1) > div.A8SBwf.emcav > div.RNNXgb > div > div.a4bIc > input";
-      page.locator(inputSelector).fill("朝倉未来");
-      page.press(inputSelector, "Enter");
-      page.waitForTimeout(5000);
+      page.navigate("https://www.google.co.jp/videohp?hl=ja");
+      page.waitForTimeout(1000);
+      String inputSelector = "#lst-ib";
+      page.locator(inputSelector).fill(keyword);
+      page.locator(inputSelector).press("Enter");
+      page.waitForTimeout(1000);
       page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get("example.png")));
+      String aTagWrapperClassName = "#rso > div:nth-child(n) > div > video-voyager > div > div > div > div.ct3b9e";
+      List<ElementHandle> aTagElements = page.querySelectorAll(aTagWrapperClassName);
+      for (ElementHandle aTagElement: aTagElements) {
+        System.out.println(aTagElement.querySelector("a").getAttribute("href"));
+      }
+    } catch (Exception e) {
+      System.out.println(e);
     }
   }
 }

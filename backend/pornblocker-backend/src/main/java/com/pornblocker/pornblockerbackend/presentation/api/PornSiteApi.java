@@ -28,8 +28,9 @@ public class PornSiteApi {
     return pornSites;
   }
 
-  @GetMapping("/scraping")
+  @GetMapping("/collect")
   public void execScraping() {
-    service.scrapingGoogle();
+    String keyword = "朝倉未来";
+    service.scrapingPornUrlFromGoogle(keyword);
   }
 }
