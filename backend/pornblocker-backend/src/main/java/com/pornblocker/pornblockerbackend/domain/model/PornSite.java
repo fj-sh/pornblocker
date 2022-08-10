@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PornSite {
-  private Integer pornSiteId;
+  private Long pornSiteId;
   private String siteUrl;
 
   public PornSite(PornSiteEntity entity) {

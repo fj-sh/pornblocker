@@ -37,7 +37,7 @@ public class PornSiteApiTest {
   @Test
   public void getAllPornSites_whenGetMethod() throws Exception {
     PornSite pornSite = new PornSite();
-    pornSite.setPornSiteId(1);
+    pornSite.setPornSiteId(1L);
     pornSite.setSiteUrl("https://google.com");
 
     List<PornSite> allSites = Arrays.asList(pornSite);

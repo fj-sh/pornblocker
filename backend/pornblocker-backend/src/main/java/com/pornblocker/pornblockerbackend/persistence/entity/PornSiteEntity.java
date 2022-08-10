@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "PORN_SITE")
@@ -14,16 +15,23 @@ public class PornSiteEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "PORN_SITE_ID")
-  private Integer pornSiteId;
+  private Long pornSiteId;
 
   @Column(name = "SITE_URL")
   private String siteUrl;
 
-  public Integer getPornSiteId() {
+  public PornSiteEntity(Long pornSiteId, String siteUrl) {
+    this.pornSiteId = pornSiteId;
+    this.siteUrl = siteUrl;
+  }
+
+  public PornSiteEntity() {}
+
+  public Long getPornSiteId() {
     return pornSiteId;
   }
 
-  public void setPornSiteId(Integer pornSiteId) {
+  public void setPornSiteId(Long pornSiteId) {
     this.pornSiteId = pornSiteId;
   }
 

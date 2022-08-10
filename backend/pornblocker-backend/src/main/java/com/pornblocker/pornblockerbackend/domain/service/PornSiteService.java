@@ -12,7 +12,7 @@ import com.pornblocker.pornblockerbackend.persistence.repository.KeywordsReposit
 import com.pornblocker.pornblockerbackend.persistence.repository.PornSiteRepository;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Paths;
+import com.google.common.collect.Streams;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -68,7 +68,7 @@ public class PornSiteService {
   public List<String> getSearchResultUrlsByKeyword(String keyword) {
     try (Playwright playwright = Playwright.create()) {
       BrowserType.LaunchOptions options = new BrowserType.LaunchOptions();
-      options.setHeadless(false);
+//      options.setHeadless(false);
       Browser browser = playwright.webkit().launch(options);
       Page page = browser.newPage();
       page.navigate("https://www.google.co.jp/videohp?hl=ja");
@@ -79,7 +79,7 @@ public class PornSiteService {
       page.waitForTimeout(1000);
       List<String> pornUrls = new ArrayList<String>();
       String nextLinkSelector = "#pnnext > span:nth-child(2)";
-      for (int i = 0; i <= 30; i++) {
+      for (int i = 0; i <= 5; i++) {
         page.locator(nextLinkSelector).click();
         page.waitForTimeout(1000);
         List<String> pornUrlsFromPage = getPornUrlsFromPage(page);
@@ -87,7 +87,8 @@ public class PornSiteService {
       }
 
       List<String> uniquePronUrls = new ArrayList<>(new HashSet<>(pornUrls));
-      return uniquePronUrls;
+      List<String> sortedUniquePronUrls = uniquePronUrls.stream().sorted().toList();
+      return sortedUniquePronUrls;
 
     } catch (Exception e) {
       System.out.println(e);
@@ -101,9 +102,19 @@ public class PornSiteService {
     List<String> allUrls = new ArrayList<>();
     allUrls.addAll(List.copyOf(pornUrls));
     allUrls.addAll(List.copyOf(pornSiteUrlsByDB));
-    List<String> allUniqueUrls = new ArrayList<String>(new HashSet<>(allUrls));
-    for (String url: allUniqueUrls) {
-      System.out.println(url);
+    List<String> allUniqueUrls = new ArrayList<>(new HashSet<>(allUrls));
+
+
+    List<PornSiteEntity> allPornSiteEntities = Streams.mapWithIndex(
+        allUniqueUrls.stream(),(str, index) -> new PornSiteEntity(index, str)
+    ).toList();
+
+    pornSiteRepository.deleteAll();
+
+    for (var entity: allPornSiteEntities) {
+      System.out.println(entity.getSiteUrl());
     }
+    pornSiteRepository.saveAll(allPornSiteEntities);
+
   }
 }
