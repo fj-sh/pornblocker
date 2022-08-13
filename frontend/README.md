@@ -71,3 +71,29 @@ module.exports = {
   semi: false,
 }
 ```
+
+
+## Tailwind CSS の導入
+
+```
+npm i -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+tailwind.config.cjs
+
+```js
+content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+```
+
+
+index.css
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
