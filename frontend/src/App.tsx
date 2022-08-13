@@ -1,7 +1,7 @@
-import React, { ChangeEvent, useRef } from 'react'
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 
 import './App.css'
-import { DEFAULT_REDIRECT_URL } from './content-script/redirect'
+import { DEFAULT_REDIRECT_URL, getRedirectTimer } from './background-script/background'
 
 /**
  * App.tsx
@@ -10,6 +10,7 @@ import { DEFAULT_REDIRECT_URL } from './content-script/redirect'
 function App() {
   const redirectUrl = useRef<HTMLInputElement>(null)
   const alsoSnsRedirect = useRef<boolean>(false)
+  const [redirectTimer, setRedirectTimer] = useState<number | undefined>(undefined)
   const onSave = () => {
     if (redirectUrl.current && redirectUrl.current.value) {
       console.log(redirectUrl.current.value)
@@ -21,8 +22,18 @@ function App() {
     alsoSnsRedirect.current = event.target.checked
   }
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      getRedirectTimer().then((redirectTimerFromLocalStorage) => {
+        setRedirectTimer(redirectTimerFromLocalStorage)
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  })
+
   return (
     <div className="auto">
+      RedirectTimer:{redirectTimer}
       <div className="flex items-center mb-5">
         <label
           htmlFor="url"

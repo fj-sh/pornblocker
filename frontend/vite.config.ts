@@ -21,12 +21,6 @@ const manifest = defineManifest({
     service_worker: 'src/background-script/background.ts',
     type: 'module',
   },
-  content_scripts: [
-    {
-      js: ['src/content-script/redirect.ts'],
-      matches: ['https://www.youtube.com/*'],
-    },
-  ],
 })
 
 // https://vitejs.dev/config/
