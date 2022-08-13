@@ -97,3 +97,30 @@ index.css
 @tailwind components;
 @tailwind utilities;
 ```
+
+## テストを導入する
+
+```shell
+npm install jest @types/jest ts-jest --save-dev
+touch jest.config.json
+```
+
+jest.config.json
+
+```json
+{
+  "roots": [
+    "<rootDir>/src"
+  ],
+  "testMatch": [
+    "**/__tests__/**/*.+(ts|tsx|js)",
+    "**/?(*.)+(spec|test).+(ts|tsx|js)"
+  ],
+  "transform": {
+    "^.+\\.(ts|tsx)$": "ts-jest"
+  }
+}
+
+```
+
+https://medium.com/information-and-technology/integration-testing-browser-extensions-with-jest-676b4e9940ca

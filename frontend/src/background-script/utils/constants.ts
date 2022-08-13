@@ -1,4 +1,12 @@
-export const targetSnses = ['twitter.com']
+export const targetSnses = [
+  'twitter.com',
+  'facebook.com',
+  'youtube.com',
+  'tiktok.com',
+  'instagram.com',
+  'linkedin.com',
+  'm.weibo.cn',
+]
 export const targetPorns = [
   'https://ona-max.club/',
   'https://sweetbigboobstube.com/',
@@ -35,7 +43,6 @@ export const targetPorns = [
   'https://bang-movies.com/',
   'https://fimsex.org/',
   'https://tiam.jp/',
-  'https://www.youtube.com/',
   'https://javstar.mobi/',
   'https://www.tokyomotion.net/',
   'https://www.sokmil.com/',
@@ -75,7 +82,6 @@ export const targetPorns = [
   'https://mirei-world.com/',
   'https://iporn.win/',
   'https://www.xv-videos1.com/',
-  'https://twitter.com/',
   'https://e-movie-hamemiru.ebbs.jp/',
   'https://gizmoxxx.com/',
   'http://adultdougaangel.com/',
