@@ -28,6 +28,14 @@ public class PornSiteApi {
     return pornSites;
   }
 
+  @GetMapping(value = "/urls", produces = MediaType.APPLICATION_JSON_VALUE)
+  public List<String> getPornSiteUrls() {
+    LOGGER.info("getPornSiteUrls");
+    var pornSites = service.getAllPornSites();
+    var pornSiteUrls = pornSites.stream().map(PornSite::getSiteUrl).toList();
+    return pornSiteUrls;
+  }
+
   @GetMapping("/collect")
   public void execScraping() {
     List<String> pornUrls = service.getSearchResultUrls();

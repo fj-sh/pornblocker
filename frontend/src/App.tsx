@@ -1,4 +1,4 @@
-import React, { ChangeEvent, ChangeEventHandler, useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useState } from 'react'
 
 import './App.css'
 import {
@@ -8,6 +8,14 @@ import {
   setRedirectUrlToLocalStorage,
   setSnsRedirectToLocalStorage,
 } from './background-script/background'
+import { targetPorns, targetSnses } from './background-script/utils/constants'
+
+function validateRedirectUrl(redirectUrl: string): boolean {
+  const isSnsArray = targetSnses.filter((targetSns) => redirectUrl.includes(targetSns))
+  const isPornArray = targetPorns.filter((targetPorn) => redirectUrl.includes(targetPorn))
+
+  return isSnsArray.length === 0 && isPornArray.length === 0
+}
 
 /**
  * App.tsx
@@ -15,11 +23,17 @@ import {
  */
 function App() {
   const [redirectUrl, setRedirectUrl] = useState<string>('')
-
   const [snsRedirect, setSnsRedirect] = useState<boolean>(false)
   const [redirectTimer, setRedirectTimer] = useState<number | undefined>(undefined)
+  const [errorMessage, setErrorMessage] = useState<string>('')
   const onSave = async () => {
     // リダイレクト先がSNSやポルノサイトの場合はエラーメッセージを表示する
+    const validUrl = validateRedirectUrl(redirectUrl)
+    if (!validUrl) {
+      setErrorMessage('Pornographic sites and social networking sites cannot be redirected to.')
+      return
+    }
+    setErrorMessage('')
     await setRedirectUrl(redirectUrl)
     await setRedirectUrlToLocalStorage(redirectUrl)
   }
@@ -80,12 +94,13 @@ function App() {
                       outline-none w-96"
         />
         <button
-          className="ml-5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="ml-5 bg-blue-500 hover:bg-blue-700 text-white peer-focus:outline-none peer-focus:ring-blue-300 font-bold py-2 px-4 rounded"
           onClick={onSave}
         >
           Save
         </button>
       </div>
+      {errorMessage && <span className="text-red-600">{errorMessage}</span>}
       <label htmlFor="default-toggle" className="inline-flex relative items-center cursor-pointer">
         <input
           type="checkbox"
