@@ -10,6 +10,7 @@ import com.pornblocker.pornblockerbackend.domain.model.PornSite;
 import com.pornblocker.pornblockerbackend.persistence.entity.PornSiteEntity;
 import com.pornblocker.pornblockerbackend.persistence.repository.KeywordsRepository;
 import com.pornblocker.pornblockerbackend.persistence.repository.PornSiteRepository;
+import com.pornblocker.pornblockerbackend.presentation.api.PornSiteApi;
 import java.net.MalformedURLException;
 import java.net.URL;
 import com.google.common.collect.Streams;
@@ -19,12 +20,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class PornSiteService {
   private final PornSiteRepository pornSiteRepository;
   private final KeywordsRepository keywordsRepository;
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(PornSiteService.class);
 
   public PornSiteService(PornSiteRepository pornSiteRepository,
                          KeywordsRepository keywordsRepository) {
@@ -53,50 +58,105 @@ public class PornSiteService {
   }
 
   public List<String> getSearchResultUrls() {
+    List<String> flatUrls = new ArrayList<>();
     try {
+      generateBrowserPage();
       Keywords keywords = keywordsRepository.getKeywords();
       Stream<List> urls = keywords.getKeywords().map(this::getSearchResultUrlsByKeyword);
-      List<String> flatUrls = (List<String>) urls.flatMap(Collection::stream)
+      List<String> videoUrls = (List<String>) urls.flatMap(Collection::stream)
           .collect(Collectors.toList());
-      return flatUrls;
+      flatUrls.addAll(videoUrls);
+      System.out.println("動画の取得が完了しました。");
+
+      Keywords keywords2 = keywordsRepository.getKeywords();
+      Stream<List> imageUrls = keywords2.getKeywords().map(this::getImageSearchResultUrlsByKeyword);
+      List<String> flatImageUrls = (List<String>) imageUrls.flatMap(Collection::stream).toList();
+      for (String imageUrl: flatImageUrls) {
+        System.out.println("画像：" + imageUrl);
+      }
+      flatUrls.addAll(flatImageUrls);
+      this.browserPage.close();
     } catch (Exception e) {
-      System.out.println(e);
+      e.printStackTrace();
     }
-    return null;
+
+    List<String> uniquePronUrls = new ArrayList<>(new HashSet<>(flatUrls));
+    List<String> sortedUniquePronUrls = uniquePronUrls.stream().sorted().toList();
+    return sortedUniquePronUrls;
+  }
+
+  private Page browserPage;
+  private void generateBrowserPage() {
+    Playwright playwright = Playwright.create();
+    BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(false);
+    Browser browser = playwright.webkit().launch(options);
+    this.browserPage = browser.newPage();
+  }
+
+  private Page getNavigatedPage(String url) {
+    browserPage.navigate(url);
+    browserPage.waitForTimeout(1000);
+    return browserPage;
   }
 
   public List<String> getSearchResultUrlsByKeyword(String keyword) {
-    try (Playwright playwright = Playwright.create()) {
-      BrowserType.LaunchOptions options = new BrowserType.LaunchOptions();
-//      options.setHeadless(false);
-      Browser browser = playwright.webkit().launch(options);
-      Page page = browser.newPage();
-      page.navigate("https://www.google.co.jp/videohp?hl=ja");
-      page.waitForTimeout(1000);
+    List<String> pornUrls = new ArrayList<String>();
+    try {
+      String videoSearchUrl = "https://www.google.co.jp/videohp?hl=ja";
+      Page page = getNavigatedPage(videoSearchUrl);
       String inputSelector = "#lst-ib";
       page.locator(inputSelector).fill(keyword);
       page.locator(inputSelector).press("Enter");
       page.waitForTimeout(1000);
-      List<String> pornUrls = new ArrayList<String>();
+
       String nextLinkSelector = "#pnnext > span:nth-child(2)";
-      for (int i = 0; i <= 5; i++) {
+      for (int i = 1; i <= 3; i++) {
         page.locator(nextLinkSelector).click();
         page.waitForTimeout(1000);
         List<String> pornUrlsFromPage = getPornUrlsFromPage(page);
         pornUrls.addAll(pornUrlsFromPage);
       }
 
-      List<String> uniquePronUrls = new ArrayList<>(new HashSet<>(pornUrls));
-      List<String> sortedUniquePronUrls = uniquePronUrls.stream().sorted().toList();
-      return sortedUniquePronUrls;
-
     } catch (Exception e) {
       System.out.println(e);
     }
-    return null;
+    return pornUrls;
   }
 
-  public void insertPornUrls (List<String> pornUrls) {
+  public List<String> getImageSearchResultUrlsByKeyword(String keyword) {
+    System.out.println("画像を取得します。");
+    String imageSearchUrl = "https://www.google.com/imghp?hl=ja_JP";
+    List<String> imageResultUrls = new ArrayList<>();
+    try {
+      Page page = getNavigatedPage(imageSearchUrl);
+      String inputSelector = "#sbtc > div > div.a4bIc > input";
+      page.locator(inputSelector).fill(keyword);
+      page.locator(inputSelector).press("Enter");
+      page.waitForTimeout(1000);
+      List<String> pornUrls = new ArrayList<>();
+      String imageATagSelector = "#islrg > div.islrc > div:nth-child(n) > a.VFACy.kGQAp.sMi44c.d0NI4c.lNHeqe.WGvvNb";
+
+      List<ElementHandle> imageATagElements = page.querySelectorAll(imageATagSelector);
+
+      int index = 0;
+      for (ElementHandle element : imageATagElements) {
+        String href = element.getAttribute("href");
+
+        String baseUrl = new URL(new URL(href), "/").toString();
+        imageResultUrls.add(baseUrl);
+        index++;
+        if (index == 25) {
+          break;
+        }
+      }
+    } catch (Exception e) {
+      LOGGER.error("[Exception]getImageSearchResultUrlsByKeyword" + e);
+    }
+
+    return imageResultUrls;
+  }
+
+  public void insertPornUrls(List<String> pornUrls) {
     List<PornSiteEntity> entities = pornSiteRepository.findAll();
     List<String> pornSiteUrlsByDB = entities.stream().map(PornSiteEntity::getSiteUrl).toList();
     List<String> allUrls = new ArrayList<>();
@@ -109,11 +169,12 @@ public class PornSiteService {
         allUniqueUrls.stream(),(str, index) -> new PornSiteEntity(index, str)
     ).toList();
 
-    pornSiteRepository.deleteAll();
-
-    for (var entity: allPornSiteEntities) {
+    System.out.println("以下のURLを格納します。");
+    for (PornSiteEntity entity: allPornSiteEntities) {
       System.out.println(entity.getSiteUrl());
     }
+
+    pornSiteRepository.deleteAll();
     pornSiteRepository.saveAll(allPornSiteEntities);
 
   }

@@ -32,6 +32,7 @@ public class PornSiteApi {
   public List<String> getPornSiteUrls() {
     LOGGER.info("getPornSiteUrls");
     var pornSites = service.getAllPornSites();
+
     var pornSiteUrls = pornSites.stream().map(PornSite::getSiteUrl).toList();
     return pornSiteUrls;
   }
@@ -39,6 +40,7 @@ public class PornSiteApi {
   @GetMapping("/collect")
   public void execScraping() {
     List<String> pornUrls = service.getSearchResultUrls();
+
     service.insertPornUrls(pornUrls);
   }
 }
