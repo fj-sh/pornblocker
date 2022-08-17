@@ -17,6 +17,7 @@ import com.google.common.collect.Streams;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,6 +58,42 @@ public class PornSiteService {
     return pornUrls;
   }
 
+  private List<String> excludeSomeUrl(List<String> list) {
+    List<String> excludeList = new ArrayList<>();
+    excludeList.add("https://www.amazon.co.jp/");
+    excludeList.add("https://booklive.jp/");
+    excludeList.add("https://www.rakuten.co.jp/");
+    excludeList.add("https://blog.livedoor.com/");
+    excludeList.add("https://bookwalker.jp/");
+    excludeList.add("https://posren.com/");
+    excludeList.add("https://books.rakuten.co.jp/");
+    excludeList.add("https://bunshun.jp/");
+    excludeList.add("https://ryuryumall.jp/");
+    excludeList.add("https://jp.mercari.com/");
+    excludeList.add("https://geo-online.co.jp/");
+    excludeList.add("https://ec.line.me/");
+    excludeList.add("https://twitter.com/");
+    excludeList.add("https://booklive.jp/");
+    excludeList.add("http://blog.livedoor.jp/");
+    excludeList.add("https://www.locondo.jp/");
+    excludeList.add("https://fashion.aucfan.com/");
+    excludeList.add("https://trip-partner.jp/");
+    excludeList.add("https://www.youtube.com/");
+    excludeList.add("https://topics.smt.docomo.ne.jp/");
+    excludeList.add("https://ja.wikipedia.org/");
+    excludeList.add("https://wowma.jp/");
+    excludeList.add("https://mobile.twitter.com/");
+    excludeList.add("https://www.amazon.co.jp/");
+    excludeList.add("https://ebookstore.sony.jp/");
+    excludeList.add("https://item.rakuten.co.jp/");
+    excludeList.add("https://www.oricon.co.jp/");
+    List<String> clonedList = new LinkedList(List.copyOf(list));
+    for (String excludeUrl: excludeList) {
+      clonedList.remove(excludeUrl);
+    }
+    return clonedList;
+  }
+
   public List<String> getSearchResultUrls() {
     List<String> flatUrls = new ArrayList<>();
     try {
@@ -82,7 +119,8 @@ public class PornSiteService {
 
     List<String> uniquePronUrls = new ArrayList<>(new HashSet<>(flatUrls));
     List<String> sortedUniquePronUrls = uniquePronUrls.stream().sorted().toList();
-    return sortedUniquePronUrls;
+    List<String> excludedSortedPronUrls = excludeSomeUrl(sortedUniquePronUrls);
+    return excludedSortedPronUrls;
   }
 
   private Page browserPage;
@@ -145,7 +183,7 @@ public class PornSiteService {
         String baseUrl = new URL(new URL(href), "/").toString();
         imageResultUrls.add(baseUrl);
         index++;
-        if (index == 25) {
+        if (index == 40) {
           break;
         }
       }
@@ -155,6 +193,8 @@ public class PornSiteService {
 
     return imageResultUrls;
   }
+
+
 
   public void insertPornUrls(List<String> pornUrls) {
     List<PornSiteEntity> entities = pornSiteRepository.findAll();
