@@ -2,6 +2,8 @@
 
 ## Support 
 
+If you have any comments on Porn Blocker, please contact me via [Issues](https://github.com/fj-sh/pornblocker/issues).
+
 ## Description
 
 Porn Blocker はポルノサイトに奪われた集中力を取り戻すためのChrome拡張です。
