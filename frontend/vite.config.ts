@@ -6,7 +6,7 @@ const manifest = defineManifest({
   manifest_version: 3,
   name: 'Porn Blocker',
   description:
-    'PornBlocker is a plugin that prevents you from viewing pornographic sites. When you open a porn site, it redirects you to a useful site.',
+    'PornBlocker is a plugin that prevents you from viewing pornographic sites. When you open a porn site, redirect to the useful site.',
   version: '1.0.0',
   icons: {
     '16': 'blocker.png',
