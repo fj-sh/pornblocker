@@ -1,20 +1,5 @@
 import { targetPorns, targetSnses } from './utils/constants'
-
-const BACKGROUND_ALARM_NAME = 'redirectAlarm'
 export const DEFAULT_REDIRECT_URL = 'https://www.udemy.com/'
-const DEFAULT_REDIRECT_TIME = 10
-
-chrome.alarms.clearAll().then((result) => {
-  chrome.alarms.create(BACKGROUND_ALARM_NAME, {
-    periodInMinutes: 1 / 60,
-  })
-})
-
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === BACKGROUND_ALARM_NAME) {
-    await minusRedirectTimer()
-  }
-})
 
 export async function setSnsRedirectToLocalStorage(snsRedirect: boolean) {
   await chrome.storage.local.set({ snsRedirect: snsRedirect })
@@ -27,36 +12,6 @@ export async function getSnsRedirect() {
     return false
   }
   return localStorage.snsRedirect
-}
-
-export async function getRedirectTimer() {
-  const localStorage = await chrome.storage.local.get('redirectTimer')
-  if (localStorage.redirectTimer === undefined) {
-    await chrome.storage.local.set({ redirectTimer: DEFAULT_REDIRECT_TIME })
-    return DEFAULT_REDIRECT_TIME
-  }
-  return localStorage.redirectTimer
-}
-
-async function setRedirectTimer(updatedRedirectTimer: number) {
-  if (updatedRedirectTimer === 0) {
-    await chrome.storage.local.set({ redirectTimer: DEFAULT_REDIRECT_TIME })
-  } else {
-    await chrome.storage.local.set({ redirectTimer: updatedRedirectTimer })
-  }
-}
-
-async function minusRedirectTimer() {
-  const redirectTimer = await getRedirectTimer()
-  const updatedRedirectTimer = redirectTimer - 1
-  await setRedirectTimer(updatedRedirectTimer)
-  if (updatedRedirectTimer === 0) {
-    const snsRedirect = await getSnsRedirect()
-    if (snsRedirect) {
-      await redirect(targetSnses)
-    }
-    await redirect(targetPorns)
-  }
 }
 
 async function getCurrentUrl() {
@@ -87,19 +42,10 @@ export async function getRedirectUrl() {
   }
   return localStorage.redirectUrl
 }
-/**
- * リダイレクト
- * @param {string[]} targetUrls
- */
-async function redirect(targetUrls: string[]) {
-  const currentUrl = await getCurrentUrl()
-  if (currentUrl === undefined || currentUrl.includes('chrome://extensions/')) return
 
+async function redirect() {
   const tabId = await getCurrentTabId()
   const redirectUrl = await getRedirectUrl()
-  const isTarget = targetUrls.filter((pornUrl) => currentUrl.includes(pornUrl))
-  if (isTarget.length === 0) return
-  console.log(`Redirect to ${redirectUrl} from ${currentUrl}`)
   await chrome.tabs.create({
     url: redirectUrl,
   })
@@ -108,24 +54,33 @@ async function redirect(targetUrls: string[]) {
   }
 }
 
-/**
- * SNSをリダイレクトする。
- */
-export async function redirectSns() {
-  const result = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
-  if (result[0].url === undefined) return
-  const url = result[0].url
-  const tabId = result[0].id
-  if (url == null || url.includes('chrome://extensions/')) return
-  const isTargets = targetSnses.filter((sns) => url.includes(sns))
-  if (isTargets.length !== 0) {
-    chrome.tabs.create({
-      url: DEFAULT_REDIRECT_URL,
-    })
-    if (tabId) {
-      chrome.tabs.remove(tabId)
-    }
-  }
+async function isCurrentUrlSns() {
+  const currentUrl = await getCurrentUrl()
+  const isSns = targetSnses.filter((snsUrl) => currentUrl?.includes(snsUrl))
+  return isSns.length !== 0
 }
+
+async function isCurrentUrlPorns() {
+  const currentUrl = await getCurrentUrl()
+  const isPorn = targetPorns.filter((snsUrl) => currentUrl?.includes(snsUrl))
+  return isPorn.length !== 0
+}
+
+chrome.webNavigation.onCompleted.addListener(async () => {
+  const currentUrl = await getCurrentUrl()
+  if (currentUrl === undefined || currentUrl.includes('chrome://extensions/')) return
+
+  const snsRedirect = await getSnsRedirect()
+  const isSns = await isCurrentUrlSns()
+  if (snsRedirect && isSns) {
+    await redirect()
+    return
+  }
+
+  const isPorn = await isCurrentUrlPorns()
+  if (isPorn) {
+    await redirect()
+  }
+})
 
 export {}

@@ -2,7 +2,6 @@ import React, { ChangeEvent, useEffect, useState } from 'react'
 
 import './App.css'
 import {
-  getRedirectTimer,
   getRedirectUrl,
   getSnsRedirect,
   setRedirectUrlToLocalStorage,
@@ -24,7 +23,6 @@ function validateRedirectUrl(redirectUrl: string): boolean {
 function App() {
   const [redirectUrl, setRedirectUrl] = useState<string>('')
   const [snsRedirect, setSnsRedirect] = useState<boolean>(false)
-  const [redirectTimer, setRedirectTimer] = useState<number | undefined>(undefined)
   const [errorMessage, setErrorMessage] = useState<string>('')
   const onSave = async () => {
     // リダイレクト先がSNSやポルノサイトの場合はエラーメッセージを表示する
@@ -46,12 +44,6 @@ function App() {
     await setSnsRedirectToLocalStorage(event.target.checked)
   }
 
-  const _setRedirectTimer = () => {
-    getRedirectTimer().then((redirectTimerFromLocalStorage) => {
-      setRedirectTimer(redirectTimerFromLocalStorage)
-    })
-  }
-
   useEffect(() => {
     getSnsRedirect().then((snsRedirectSettings) => {
       setSnsRedirect(snsRedirectSettings)
@@ -59,21 +51,10 @@ function App() {
     getRedirectUrl().then((redirectUrlSetting) => {
       setRedirectUrl(redirectUrlSetting)
     })
-
-    _setRedirectTimer()
-
-    const timer = setInterval(() => {
-      _setRedirectTimer()
-    }, 1000)
-    return () => clearInterval(timer)
   }, [])
 
   return (
     <div className="auto">
-      <h5 className="font-medium leading-tight text-base mt-0 mb-2 text-gray-500">
-        RedirectTimer: {redirectTimer}
-      </h5>
-
       <div className="flex items-center mb-5">
         <label
           htmlFor="url"
