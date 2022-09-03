@@ -1,6 +1,7 @@
 import { targetPorns, targetSnses } from './utils/constants'
 export const DEFAULT_REDIRECT_URL = 'https://www.udemy.com/'
 
+
 export async function setSnsRedirectToLocalStorage(snsRedirect: boolean) {
   await chrome.storage.local.set({ snsRedirect: snsRedirect })
 }
@@ -66,7 +67,7 @@ async function isCurrentUrlPorns() {
   return isPorn.length !== 0
 }
 
-chrome.webNavigation.onCompleted.addListener(async () => {
+async function main () {
   const currentUrl = await getCurrentUrl()
   if (currentUrl === undefined || currentUrl.includes('chrome://extensions/')) return
 
@@ -81,6 +82,22 @@ chrome.webNavigation.onCompleted.addListener(async () => {
   if (isPorn) {
     await redirect()
   }
+
+}
+
+chrome.webNavigation.onCompleted.addListener(async () => {
+  await main()
 })
 
-export {}
+const ALARM_NAME = 'PornBlocker'
+
+chrome.alarms.create(ALARM_NAME, {
+  periodInMinutes: 1
+})
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name == ALARM_NAME) {
+    await main()
+  }
+})
+

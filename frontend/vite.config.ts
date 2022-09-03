@@ -16,7 +16,7 @@ const manifest = defineManifest({
   action: {
     default_popup: 'index.html',
   },
-  permissions: ['storage', 'tabs', 'webNavigation'],
+  permissions: ['storage', 'tabs', 'webNavigation', 'alarms'],
   background: {
     service_worker: 'src/background-script/background.ts',
     type: 'module',

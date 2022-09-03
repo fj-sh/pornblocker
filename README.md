@@ -69,13 +69,13 @@ This is to restore the information when the extension is opened again.
 
 ### alarms が必要な理由
 
-リダイレクトするまでのカウントダウンタイマーに alarms の機能を使っています。
-定期的に秒数を計測するためです。
+現在開いているタブのURLを1分ごとに監視しています。
+ポルノサイトのURLだった場合、タブを自動で閉じます。
 
 ---
 
-The alarms function is used as a countdown timer until redirection.
-This is to measure the number of seconds periodically.
+The URL of the currently open tab is monitored every minute.
+If the URL is a pornographic site, the tab is automatically closed.
 
 ### tabs が必要な理由
 
@@ -86,3 +86,14 @@ URLの情報はサーバーに送ったりはしていません。拡張機能�
 
 Porn Blocker uses tabs to check if the URL opened by the user is a porn site.
 Porn Blocker does not send the URL information to the server. Porn Blocker checks it within the extension and redirect.
+
+
+### webNavigationが必要な理由
+
+ブラウザがサイトを読み込み終わったタイミングを検知するためにwebNavigationを使っています。
+読み込んだサイトがポルノサイトだった場合、タブを自動で閉じて、有益なサイトを開きます。
+
+--- 
+
+webNavigation is used to detect when the browser has finished loading the site.
+If the loaded site is a pornographic site, it automatically closes the tab and opens a useful site.
